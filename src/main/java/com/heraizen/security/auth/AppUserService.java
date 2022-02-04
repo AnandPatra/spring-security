@@ -28,4 +28,8 @@ public class AppUserService implements UserDetailsService {
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         return map.get(username);
     }
+
+    public void addUserDetails(UserDetails userDetails, String username) {
+        map.put(username, userDetails);
+    }
 }
