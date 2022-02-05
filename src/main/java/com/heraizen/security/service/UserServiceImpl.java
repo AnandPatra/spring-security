@@ -49,7 +49,6 @@ public class UserServiceImpl implements UserService {
             return "User registered successfully";
 
         } catch (Exception e) {
-            e.printStackTrace();
             throw new DataFormatException("Exception while registering user");
         }
     }

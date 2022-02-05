@@ -6,22 +6,22 @@ import com.heraizen.security.domain.LoginResponse;
 import com.heraizen.security.domain.LoginUser;
 import com.heraizen.security.repo.UserRepository;
 import lombok.extern.slf4j.Slf4j;
-import org.bson.assertions.Assertions;
-import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.util.Assert;
 
-import java.lang.reflect.MalformedParameterizedTypeException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.zip.DataFormatException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 @Service
 @Slf4j
@@ -42,24 +42,33 @@ public class LogServiceImpl implements LogService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private UserDetailsService userDetailsService;
+
     @Override
     public String userLogin(LoginUser loginUser) {
-        UserDetails userDetails = validateUser(loginUser);
-        String token = jwtUtil.generateToken(userDetails);
-        LoginResponse loginResponse = LoginResponse.builder().token(token).build();
-        return loginResponse.getToken();
+        try {
+            UserDetails userDetails = validateUser(loginUser);
+            String token = jwtUtil.generateToken(userDetails);
+            LoginResponse loginResponse = LoginResponse.builder().token(token).build();
+            return loginResponse.getToken();
+        } catch (Exception e) {
+            throw new RuntimeException(e.getMessage());
+        }
     }
 
     private UserDetails validateUser(LoginUser loginUser) {
         try {
-            com.heraizen.security.domain.User user = userRepository.findByEmail(loginUser.getPassword());
-            UserDetails userDetails = User.withUsername(user.getName()).password(user.getPassword()).roles(user.getRole()).disabled(user.isEnabled()).build();
-            authManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(loginUser.getUserName(), loginUser.getPassword()));
-            return userDetails;
 
-        } catch (Exception e) {
+            UserDetails userDetails = userDetailsService.loadUserByUsername(loginUser.getEmail());
+            if (userDetails != null) {
+                authManager.authenticate(
+                        new UsernamePasswordAuthenticationToken(loginUser.getEmail(), loginUser.getPassword()));
+                return userDetails;
+            }
+        } catch (BadCredentialsException e) {
             throw new BadCredentialsException("User with details not found or bad credentials");
         }
+        throw new BadCredentialsException("User with details not found or bad credentials");
     }
 }
