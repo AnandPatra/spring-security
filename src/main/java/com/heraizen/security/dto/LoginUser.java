@@ -1,4 +1,4 @@
-package com.heraizen.security.domain;
+package com.heraizen.security.dto;
 
 import lombok.Data;
 

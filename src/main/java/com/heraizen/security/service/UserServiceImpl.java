@@ -2,6 +2,7 @@ package com.heraizen.security.service;
 
 import com.heraizen.security.domain.User;
 import com.heraizen.security.dto.UserDto;
+import com.heraizen.security.exception.UserException;
 import com.heraizen.security.repo.UserRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -47,7 +48,6 @@ public class UserServiceImpl implements UserService {
             userRepository.save(user);
             sendVerificationEmail(user, request);
             return "User registered successfully";
-
         } catch (Exception e) {
             throw new DataFormatException("Exception while registering user");
         }
@@ -55,37 +55,46 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void sendVerificationEmail(User user, HttpServletRequest request) throws MessagingException, UnsupportedEncodingException {
-        String toAddress = user.getEmail();
-        String fromAddress = "noRep";
-        String senderName = "Your company name";
-        String subject = "Please verify your registration";
-        String content = "Dear [[name]],<br>" + "Please click the link below to verify your registration:<br>" + "<h3><a href=\"[[URL]]\" target=\"_self\">VERIFY</a></h3>" + "Thank you,<br>" + "Your company name.";
+        try {
+            String toAddress = user.getEmail();
+            String fromAddress = "noRep";
+            String senderName = "Spring security";
+            String subject = "Please verify your registration";
+            String content = "Dear [[name]],<br>" + "Please click the link below to verify your registration:<br>" + "<h3><a href=\"[[URL]]\" target=\"_self\">VERIFY</a></h3>" + "Thank you,<br>" + "Your company name.";
 
-        MimeMessage message = javaMailSender.createMimeMessage();
-        MimeMessageHelper helper = new MimeMessageHelper(message);
+            MimeMessage message = javaMailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message);
 
 //        helper.setFrom(fromAddress.trim().replaceAll(" ", ""), senderName);
-        log.info("Email: {}", fromAddress);
-        helper.setTo(toAddress.trim().replaceAll(" ", ""));
-        helper.setSubject(subject);
-        String siteURL = getSiteUrl(request);
-        content = content.replace("[[name]]", user.getName());
-        String verifyURL = siteURL + "/api/auth/verify?code=" + user.getVerificationCode();
-        content = content.replace("[[URL]]", verifyURL);
-        helper.setText(content, true);
-        javaMailSender.send(message);
+            log.info("Email: {}", fromAddress);
+            helper.setTo(toAddress.trim().replaceAll(" ", ""));
+            helper.setSubject(subject);
+            String siteURL = getSiteUrl(request);
+            content = content.replace("[[name]]", user.getName());
+            String verifyURL = siteURL + "/api/auth/verify?code=" + user.getVerificationCode();
+            content = content.replace("[[URL]]", verifyURL);
+            log.info("Content of mail: {}", content);
+            helper.setText(content, true);
+            javaMailSender.send(message);
+        } catch (Exception e) {
+            log.info("Exception while sending verification mail to user: {}", e.getMessage());
+        }
 
     }
 
     @Override
     public String verifyUser(String token) {
-        User user = userRepository.findByVerificationCode(token);
-        if (user != null) {
-            user.setEnabled(true);
-            userRepository.save(user);
-            return "Successfully registered";
-        }
+        try {
+            User user = userRepository.findByVerificationCode(token);
+            if (user != null) {
+                user.setEnabled(true);
+                userRepository.save(user);
+                return "Successfully, verified user.";
+            }
             return "User not found";
+        } catch (Exception e) {
+            throw new UserException("Exception while verifying user");
+        }
 
     }
 

@@ -13,17 +13,19 @@ import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.swing.*;
 import java.io.IOException;
 
 @Service
 public class AuthFilter extends OncePerRequestFilter {
 
-    @Autowired
     private JwtUtil jwtUtil;
 
-    @Autowired
     private UserDetailsService userService;
+
+    public AuthFilter(JwtUtil jwtUtil, UserDetailsService userService) {
+        this.jwtUtil = jwtUtil;
+        this.userService = userService;
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {

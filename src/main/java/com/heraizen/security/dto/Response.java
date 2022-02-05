@@ -1,4 +1,4 @@
-package com.heraizen.security.web;
+package com.heraizen.security.dto;
 
 import lombok.Builder;
 import lombok.Data;

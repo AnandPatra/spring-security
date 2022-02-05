@@ -18,8 +18,6 @@ public class JwtUtil {
     private String SECRET_KEY = "DCE223456EFD8FFBD516D4DCE223456EFD8FFBD516D4AA93158DCE223456EFD8FFBD516D4AA93158AA93158DCE223456EFD8FFBD516D4AA93158";
 
 
-
-
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
     }
