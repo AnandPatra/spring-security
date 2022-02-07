@@ -49,6 +49,7 @@ public class UserServiceImpl implements UserService {
             sendVerificationEmail(user, request);
             return "User registered successfully";
         } catch (Exception e) {
+            e.printStackTrace();
             throw new DataFormatException("Exception while registering user");
         }
     }
